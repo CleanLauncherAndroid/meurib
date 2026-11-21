@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>تحميل تطبيق معرب (APK)</title>
+  <link rel="icon" type="image/png" href="./icon.png" />
+  <meta name="description" content="حمّل تطبيق معرب - محلل النحو والإعراب العربي الصرفي الأوفلاين للأندرويد بصيغة APK" />
+  <style>
+    :root {
+      --emerald-dark: #063229;
+      --emerald: #0F5D4E;
+      --gold: #E9BF6D;
+      --gold-light: #F6DC9D;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif;
+      background: radial-gradient(circle at top, #0F5D4E 0%, #063229 70%, #04211B 100%);
+      color: #FFFFFF;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      width: 100%;
+      max-width: 460px;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1.5px solid rgba(233, 191, 109, 0.45);
+      border-radius: 28px;
+      padding: 32px 24px;
+      text-align: center;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+    }
+    .logo-wrap {
+      position: relative;
+      width: 108px;
+      height: 108px;
+      margin: 0 auto 18px;
+    }
+    .logo-img {
+      width: 108px;
+      height: 108px;
+      border-radius: 24px;
+      border: 2px solid var(--gold);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+      object-fit: cover;
+      background: #0B4A3E;
+    }
+    .logo-fallback {
+      width: 108px;
+      height: 108px;
+      border-radius: 24px;
+      background: #0B4A3E;
+      border: 2px solid var(--gold);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: bold;
+      color: var(--gold);
+    }
+    h1 {
+      font-size: 32px;
+      margin-bottom: 6px;
+      color: #FFFFFF;
+    }
+    .subtitle {
+      font-size: 16px;
+      color: #D9EFE7;
+      margin-bottom: 18px;
+      line-height: 1.5;
+    }
+    .meta {
+      display: inline-flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .pill {
+      background: rgba(0, 0, 0, 0.28);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      color: #F4E8CD;
+    }
+    .download-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      padding: 20px 24px;
+      font-size: 21px;
+      font-weight: 800;
+      color: #062820;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 55%, #D9A243 100%);
+      border-radius: 18px;
+      text-decoration: none;
+      box-shadow: 0 12px 30px rgba(233, 191, 109, 0.38);
+      transition: transform 0.15s ease;
+      cursor: pointer;
+    }
+    .download-btn:active {
+      transform: scale(0.97);
+    }
+    .share-btn {
+      margin-top: 12px;
+      width: 100%;
+      padding: 12px 18px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.08);
+      color: #F4E8CD;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: none;
+    }
+    .steps {
+      margin-top: 22px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(0, 0, 0, 0.24);
+      text-align: right;
+      font-size: 14px;
+      line-height: 1.8;
+      color: #DCEEE8;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="logo-wrap">
+      <img
+        id="appLogo"
+        src="./icon.png"
+        alt="أيقونة تطبيق معرب"
+        class="logo-img"
+        onerror="this.style.display='none';document.getElementById('logoFallback').style.display='flex';"
+      />
+      <div id="logoFallback" class="logo-fallback">مُعْرِبٌ</div>
+    </div>
+
+    <h1>تطبيق معرب</h1>
+    <p class="subtitle">محلل النحو والإعراب العربي الصرفي (يعمل بدون إنترنت بالكامل)</p>
+
+    <div class="meta">
+      <span class="pill">الإصدار 1.0</span>
+      <span class="pill" id="apkSizePill">ملف APK للأندرويد</span>
+      <span class="pill">مجاني وأوفلاين</span>
+    </div>
+
+    <a class="download-btn" href="./muerib.apk" download="muerib.apk">
+      <span>⬇</span>
+      <span>تحميل ملف التطبيق (APK)</span>
+    </a>
+
+    <button id="webShareBtn" class="share-btn" type="button">
+      مشاركة رابط التحميل مع الأصدقاء
+    </button>
+
+    <div class="steps">
+      <strong>طريقة التثبيت على الأندرويد:</strong><br/>
+      ١. اضغط على زر التحميل الكبير بالأعلى.<br/>
+      ٢. بعد انتهاء التنزيل افتح ملف <strong>muerib.apk</strong>.<br/>
+      ٣. إذا طُلب السماح بالتثبيت من هذا المصدر، وافق ثم اضغط «تثبيت».
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      fetch('./muerib.apk', { method: 'HEAD' })
+        .then(function (res) {
+          var len = res.headers.get('content-length');
+          if (res.ok && len) {
+            var mb = (parseInt(len, 10) / (1024 * 1024)).toFixed(1);
+            document.getElementById('apkSizePill').textContent = 'الحجم: ' + mb + ' ميجابايت';
+          }
+        })
+        .catch(function () {});
+
+      if (navigator.share) {
+        var btn = document.getElementById('webShareBtn');
+        btn.style.display = 'block';
+        btn.addEventListener('click', function () {
+          navigator.share({
+            title: 'تطبيق معرب - محلل النحو والإعراب',
+            text: 'حمّل تطبيق معرب لتحليل الجمل العربية وإعرابها بدون إنترنت:',
+            url: window.location.href
+          }).catch(function () {});
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

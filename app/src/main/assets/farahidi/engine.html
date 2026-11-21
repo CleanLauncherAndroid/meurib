@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <title>Farahidi Offline Engine</title>
+  <script src="farahidi.bundle.js"></script>
+</head>
+<body>
+<script>
+(function () {
+  "use strict";
+
+  const ALL_DIAC_RE = /[\u064B-\u0652\u0670]/g;
+  const FINAL_HARAKA_RE = /([\u064B-\u0652]+)$/;
+
+  let layer1Ready = false;
+  let lemmaFreqMap = null;
+
+  function loadTableFromBridge(filename) {
+    const ok = AndroidBridge.openAssetTable(filename);
+    if (!ok) {
+      throw new Error("تعذر فتح ملف المعجم المحلي: " + filename);
+    }
+    const parts = [];
+    while (true) {
+      const chunk = AndroidBridge.readAssetChunk();
+      if (chunk === null || chunk === undefined) break;
+      parts.push(chunk);
+    }
+    return parts.join("");
+  }
+
+  // Called synchronously by farahidi.bundle.js whenever a dictionary table is first needed
+  window.__farahidiLoadRawText = function (filename) {
+    return loadTableFromBridge(filename);
+  };
+
+  function getLemmaFrequency(lemma) {
+    if (!lemma) return 0;
+    if (!lemmaFreqMap) {
+      lemmaFreqMap = new Map();
+      const raw = loadTableFromBridge("DATA.MSA-LEMMA.ALL-train.map.jsonl.gz");
+      const lines = raw.split("\n");
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        try {
+          const rec = JSON.parse(line);
+          if (rec && rec.key) {
+            lemmaFreqMap.set(rec.key, Number(rec.value) || 0);
+          }
+        } catch (_) {}
+      }
+    }
+    return lemmaFreqMap.get(lemma) || 0;
+  }
+
+  function stripAllDiacritics(w) {
+    return w.replace(ALL_DIAC_RE, "");
+  }
+
+  function keepOnlyFinalHaraka(w) {
+    const m = FINAL_HARAKA_RE.exec(w);
+    if (!m) return stripAllDiacritics(w);
+    const body = w.slice(0, m.index).replace(ALL_DIAC_RE, "");
+    const ending = m[1].replace(/\u0651/g, "");
+    return body + ending;
+  }
+
+  function extractExplicitHaraka(w) {
+    const m = FINAL_HARAKA_RE.exec(w);
+    if (!m) return null;
+    const h = m[1];
+    if (h.includes("\u064F") || h.includes("\u064C")) return "مرفوع";
+    if (h.includes("\u064E") || h.includes("\u064B")) return "منصوب";
+    if (h.includes("\u0650") || h.includes("\u064D")) return "مجرور";
+    if (h.includes("\u0652")) return "مجزوم_أو_مبني";
+    return null;
+  }
+
+  function tokenizeArabic(sentence) {
+    const cleaned = sentence
+      .replace(/[،؛:.!؟?"'«»()\[\]{}ـ]/g, " ")
+      .trim();
+    if (!cleaned) return [];
+    return cleaned.split(/\s+/).filter(Boolean);
+  }
+
+  function analyzeWithFallback(word) {
+    let list = window.Farahidi.analyze(word);
+    if (list && list.length > 0) return list;
+    const finalOnly = keepOnlyFinalHaraka(word);
+    if (finalOnly !== word) {
+      list = window.Farahidi.analyze(finalOnly);
+      if (list && list.length > 0) return list;
+    }
+    const bare = stripAllDiacritics(word);
+    if (bare !== word && bare !== finalOnly) {
+      list = window.Farahidi.analyze(bare);
+      if (list && list.length > 0) return list;
+    }
+    return [];
+  }
+
+  function serializeReading(a, explicitHaraka) {
+    const infl = (a.inflections && a.inflections.length > 0) ? a.inflections[0] : null;
+    const caseOrMood = explicitHaraka || (infl ? (infl.case || infl.mood || null) : null);
+    return {
+      diacritized: (infl && infl.diacritized) ? infl.diacritized : (a.diacritized || ""),
+      lemma: a.lemma || "",
+      stem: a.stem || "",
+      root: a.root || null,
+      pattern: a.pattern || null,
+      part_of_speech: a.pos || "",
+      sub_type: a.type || null,
+      tense: a.tense || null,
+      gender: a.gender || null,
+      number: a.number || null,
+      person: a.person || null,
+      pronoun: a.pronoun || null,
+      voice: a.voice || null,
+      state: infl ? (infl.state || null) : null,
+      case_or_mood: caseOrMood,
+      proclitics: (a.proclitics || []).map(p => ({ form: p.form, description: p.description })),
+      enclitics: (a.enclitics || []).map(e => ({ form: e.form, description: e.description })),
+      score: a.score || 0
+    };
+  }
+
+  window.analyze_text = function (requestId, sentence, useLayer2) {
+    try {
+      if (!layer1Ready) {
+        AndroidBridge.onAnalysisError(requestId, "محرك التحليل الصرفي قيد التجهيز، حاول بعد لحظة.");
+        return;
+      }
+
+      const rawTokens = tokenizeArabic(sentence);
+      const shouldUseLayer2 = (useLayer2 === undefined || useLayer2 === true);
+
+      const output = rawTokens.map((origWord) => {
+        const bareWord = stripAllDiacritics(origWord);
+        const explicitHaraka = extractExplicitHaraka(origWord);
+
+        let analyses = analyzeWithFallback(origWord);
+        if ((!analyses || analyses.length === 0) && bareWord !== origWord) {
+          analyses = window.Farahidi.analyze(bareWord) || [];
+        }
+
+        const readings = [];
+        const seen = new Set();
+        for (let i = 0; i < analyses.length && readings.length < 15; i++) {
+          const item = serializeReading(analyses[i], explicitHaraka);
+          const key = `${item.part_of_speech}|${item.sub_type}|${item.tense}|${item.lemma}|${item.case_or_mood}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            readings.push(item);
+          }
+        }
+
+        let primary = readings.length > 0 ? readings[0] : null;
+        if (shouldUseLayer2 && readings.length > 1) {
+          let bestScore = -1;
+          for (let i = 0; i < readings.length; i++) {
+            const freq = getLemmaFrequency(readings[i].lemma);
+            if (freq > bestScore) {
+              bestScore = freq;
+              primary = readings[i];
+            }
+          }
+        }
+
+        return {
+          originalWord: origWord,
+          bareWord: bareWord,
+          explicitHaraka: explicitHaraka,
+          contextLemma: primary ? primary.lemma : null,
+          contextStem: primary ? primary.stem : null,
+          contextRoot: primary ? primary.root : null,
+          part_of_speech: primary ? primary.part_of_speech : "غير محدد",
+          case_or_mood: primary ? primary.case_or_mood : explicitHaraka,
+          primary: primary,
+          readings: readings
+        };
+      });
+
+      AndroidBridge.onAnalysisResult(requestId, JSON.stringify({
+        sentence: sentence,
+        layer2Used: shouldUseLayer2,
+        tokens: output
+      }));
+    } catch (err) {
+      AndroidBridge.onAnalysisError(requestId, String(err && err.message ? err.message : err));
+    }
+  };
+
+  function initEngine() {
+    try {
+      if (!window.Farahidi) {
+        throw new Error("لم يتم تحميل حزمة الفراهيدي المحلية");
+      }
+      // Verify dictionary bridge works without loading 350+ MB into WebView RAM
+      window.Farahidi.analyze("كتب");
+      layer1Ready = true;
+      AndroidBridge.onLayer1Ready(true, "");
+      AndroidBridge.onLayer2Ready(true);
+    } catch (e) {
+      AndroidBridge.onLayer1Ready(false, String(e && e.message ? e.message : e));
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initEngine);
+  } else {
+    initEngine();
+  }
+})();
+</script>
+</body>
+</html>

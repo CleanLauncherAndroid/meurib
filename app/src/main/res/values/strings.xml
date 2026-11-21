@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">معرب</string>
+    <string name="tab_analyze">الإعراب</string>
+    <string name="tab_history">السجل</string>
+    <string name="offline_badge">يعمل دون إنترنت • محرك الفراهيدي</string>
+    <string name="input_label">أدخل جملة عربية للإعراب</string>
+    <string name="input_hint">مثال: ذهب الولد إلى المدرسة</string>
+    <string name="btn_analyze">تحليل</string>
+    <string name="btn_clear">مسح</string>
+    <string name="btn_copy">نسخ الإعراب</string>
+    <string name="col_word">الكلمة</string>
+    <string name="col_pos">نوعها</string>
+    <string name="col_role">موقعها النحوي</string>
+    <string name="col_case">حالتها الإعرابية</string>
+    <string name="empty_history_title">لا توجد جمل محفوظة بعد</string>
+    <string name="empty_history_subtitle">ابدأ بتحليل جملة عربية في تبويب الإعراب لحفظها تلقائياً هنا</string>
+</resources>

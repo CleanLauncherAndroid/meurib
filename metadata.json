@@ -1,0 +1,6 @@
+{
+  "name": "معرب",
+  "description": "تطبيق أندرويد أوفلاين لإعراب وتحليل الجمل العربية نحوياً وصرفياً باستخدام محرك الفراهيدي.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
